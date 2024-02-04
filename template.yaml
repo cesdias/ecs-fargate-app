@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  VpcCIDR:
+    Description: CIDR block for the VPC
+    Type: String
+    Default: 192.168.0.0/16
+
+  PublicSubnet1CIDR:
+    Description: CIDR block for the public subnet 1
+    Type: String
+    Default: 192.168.1.0/24
+
+  PublicSubnet2CIDR:
+    Description: CIDR block for the public subnet 2
+    Type: String
+    Default: 192.168.2.0/24
+
+  PublicSubnet3CIDR:
+    Description: CIDR block for the public subnet 3
+    Type: String
+    Default: 192.168.3.0/24
+
+  PrivateSubnet1CIDR:
+    Description: CIDR block for the private subnet 1
+    Type: String
+    Default: 192.168.4.0/24
+
+  PrivateSubnet2CIDR:
+    Description: CIDR block for the private subnet 2
+    Type: String
+    Default: 192.168.5.0/24
+
+  PrivateSubnet3CIDR:
+    Description: CIDR block for the private subnet 3
+    Type: String
+    Default: 192.168.6.0/24
+
+  ContainerImage:
+    Description: URL of the Docker container image
+    Type: String
+    Default: docker-image-url
+
+### Resources definition
+Resources:
+
+  # Virtual Private Cloud definition
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-vpc"
+
+  # Public Subnets
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref 'PublicSubnet1CIDR'
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-public-subnet-1"
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref 'PublicSubnet2CIDR'
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-public-subnet-2"
+
+  PublicSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref 'PublicSubnet3CIDR'
+      AvailabilityZone: !Select
+        - 2
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-public-subnet-3"
+
+  # Private Subnets
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref 'PrivateSubnet1CIDR'
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-subnet-1"
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref 'PrivateSubnet2CIDR'
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-subnet-2"
+
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref 'PrivateSubnet3CIDR'
+      AvailabilityZone: !Select
+        - 2
+        - !GetAZs ""
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-subnet-3"
