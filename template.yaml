@@ -165,3 +165,33 @@ Resources:
       Tags:
         - Key: Name
           Value: ecs-fargate-app-lb
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: ApplicationLoadBalancer
+    Properties:
+      VpcId: !Ref VPC
+      Name: ecs-fargate-app-tg
+      HealthCheckEnabled: true
+      HealthCheckPath: /
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP
+      HealthyThresholdCount: 5
+      HealthCheckIntervalSeconds: 60
+      HealthCheckTimeoutSeconds: 5
+      TargetType: ip
+      Port: 80
+      Protocol: HTTP
+      Tags:
+        - Key: Name
+          Value: ecs-fargate-app-tg
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
