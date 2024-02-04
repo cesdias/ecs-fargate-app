@@ -289,16 +289,17 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Name: ecs-fargate-app-tg
+      TargetType: ip
+      Port: 80
+      Protocol: HTTP
       HealthCheckEnabled: true
       HealthCheckPath: /
-      HealthCheckPort: 3000
       HealthCheckProtocol: HTTP
       HealthyThresholdCount: 5
       HealthCheckIntervalSeconds: 60
       HealthCheckTimeoutSeconds: 5
-      TargetType: ip
-      Port: 80
-      Protocol: HTTP
+      Matcher:
+        HttpCode: 200
       Tags:
         - Key: Name
           Value: ecs-fargate-app-tg
