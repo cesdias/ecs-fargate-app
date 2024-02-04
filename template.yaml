@@ -129,3 +129,27 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-private-subnet-3"
+
+  ### Security Groups definition
+
+  # Allow inbound traffic to HTTP and HTTPS
+  WebAppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for the web application
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - Description: Allow HTTP inbound traffic
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - Description: Allow HTTPS inbound traffic
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
