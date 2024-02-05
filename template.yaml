@@ -29,7 +29,7 @@ Parameters:
   ContainerImage:
     Description: URL of the Docker container image
     Type: String
-    Default: docker-image-url
+    Default: docker.io/cesdias/ecs-fargate-app:latest
 
 ### Resources definition
 Resources:
