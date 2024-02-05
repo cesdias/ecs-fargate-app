@@ -421,7 +421,7 @@ Resources:
       TaskDefinition: !Ref TaskDefinition
       LaunchType: FARGATE
       PlatformVersion: 1.4.0
-      DesiredCount: 1
+      DesiredCount: 4
       LoadBalancers:
         - TargetGroupArn: !Ref TargetGroup
           ContainerName: ecs-fargate-app
