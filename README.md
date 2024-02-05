@@ -6,6 +6,9 @@ This repository contains a CloudFormation template to deploy a containerized web
 
 - AWS CLI installed and configured
 - Docker image URL for your application
+- AWS user with permission to instantiate the resources
+
+⚠️ At this moment, please attach the `AdministratorAccess` policy to your AWS user to avoid errors during the creation of the Cloudformation Stack (i.e. permission errors).
 
 ## Deployment Steps
 
@@ -326,3 +329,6 @@ This project is currently a work in progress. The following enhancements are pla
 
 3. Add HTTPS to Load Balancer:
    * SSL certificates for the Application Load Balancer managed by AWS ACM
+
+4. Create a policy for deploy the Cloudformation Stack
+   * Allow only the necessary permission on the resources
