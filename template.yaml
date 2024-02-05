@@ -163,12 +163,18 @@ Resources:
     Properties:
       AllocationId: !GetAtt NatGatewaySubnet1Attachment.AllocationId
       SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: ecs-fargate-app-nat-gateway-subnet-1
 
   NatGatewaySubnet2:
     Type: AWS::EC2::NatGateway
     Properties:
       AllocationId: !GetAtt NatGatewaySubnet2Attachment.AllocationId
       SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: ecs-fargate-app-nat-gateway-subnet-2
 
   # Route Table for Private Subnets
   PrivateRouteTableSubnet1:
@@ -177,7 +183,7 @@ Resources:
       VpcId: !Ref 'VPC'
       Tags:
         - Key: Name
-          Value: ecs-fargate-app-private-subnet1-rtb
+          Value: ecs-fargate-app-private-subnet-1-rtb
 
   PrivateRouteTableSubnet2:
     Type: AWS::EC2::RouteTable
@@ -185,7 +191,7 @@ Resources:
       VpcId: !Ref 'VPC'
       Tags:
         - Key: Name
-          Value: ecs-fargate-app-private-subnet2-rtb
+          Value: ecs-fargate-app-private-subnet-2-rtb
 
   # Route for Private Subnets
   PrivateRouteSubnet1:
@@ -222,7 +228,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for the web application
-      GroupName: ecs-fargate-app-sg-lb
+      GroupName: ecs-fargate-app-alb-sg
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - Description: Allow HTTP inbound traffic
@@ -230,25 +236,19 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-
-          #- Description: Allow HTTPS inbound traffic
-          #  IpProtocol: tcp
-          #  FromPort: 443
-          #  ToPort: 443
-          #  CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
           IpProtocol: "-1"
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: ecs-fargate-app-sg-lb
+          Value: ecs-fargate-app-alb-sg
 
   ECSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for Fargate Containers on ECS Service
-      GroupName: ecs-fargate-app-sg-ecs
+      GroupName: ecs-fargate-app-alb-sg
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - Description: Allow port 3000 inbound traffic
@@ -262,7 +262,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: ecs-fargate-app-sg-ecs
+          Value: ecs-fargate-app-ecs-sg
 
   ### Load Balancer definition
 
@@ -271,7 +271,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Type: application
-      Name: ecs-fargate-app-lb
+      Name: ApplicationLoadBalancer
       Scheme: internet-facing
       Subnets:
         - !Ref PublicSubnet1
@@ -280,7 +280,7 @@ Resources:
         - !Ref WebAppSecurityGroup
       Tags:
         - Key: Name
-          Value: ecs-fargate-app-lb
+          Value: ecs-fargate-app-alb
 
   # Target Group for ECS Service
   TargetGroup:
@@ -288,7 +288,7 @@ Resources:
     DependsOn: ApplicationLoadBalancer
     Properties:
       VpcId: !Ref VPC
-      Name: ecs-fargate-app-tg
+      Name: TargetGroup
       TargetType: ip
       Port: 80
       Protocol: HTTP
@@ -327,15 +327,12 @@ Resources:
           - Effect: Allow
             Principal:
               Service: [ecs-tasks.amazonaws.com]
-            Action: [sts:AssumeRole]
+            Action: ['sts:AssumeRole']
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      Tags:
-        - Key: Name
-          Value: ecs-fargate-app-ecsTaskExecutionRole
 
-  ECSRole:
+  ECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -343,32 +340,33 @@ Resources:
           - Effect: Allow
             Principal:
               Service: [ecs-tasks.amazonaws.com]
-            Action: [sts:AssumeRole]
+            Action: ['sts:AssumeRole']
       Path: /
       Policies:
-      - PolicyName: ecs-service
-        PolicyDocument:
-          Statement:
-          - Effect: Allow
-            Action:
-              # Rules which allow ECS to attach network interfaces to instances
-              # on your behalf in order for awsvpc networking mode to work right
-              - 'ec2:AttachNetworkInterface'
-              - 'ec2:CreateNetworkInterface'
-              - 'ec2:CreateNetworkInterfacePermission'
-              - 'ec2:DeleteNetworkInterface'
-              - 'ec2:DeleteNetworkInterfacePermission'
-              - 'ec2:Describe*'
-              - 'ec2:DetachNetworkInterface'
+        - PolicyName: ECSTaskRole
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
 
-              # Rules which allow ECS to update load balancers on your behalf
-              # with the informations about how to send traffic to your containers
-              - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
-              - 'elasticloadbalancing:DeregisterTargets'
-              - 'elasticloadbalancing:Describe*'
-              - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
-              - 'elasticloadbalancing:RegisterTargets'
-            Resource: '*'
+                  # Rules which allow ECS to attach network interfaces to instances
+                  # on your behalf in order for awsvpc networking mode to work right
+                  - ec2:AttachNetworkInterface
+                  - ec2:CreateNetworkInterface
+                  - ec2:CreateNetworkInterfacePermission
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DeleteNetworkInterfacePermission
+                  - ec2:Describe*
+                  - ec2:DetachNetworkInterface
+
+                  # Rules which allow ECS to update load balancers on your behalf
+                  # with the informations about how to send traffic to your containers
+                  - elasticloadbalancing:DeregisterInstancesFromLoadBalancer
+                  - elasticloadbalancing:DeregisterTargets
+                  - elasticloadbalancing:Describe*
+                  - elasticloadbalancing:RegisterInstancesWithLoadBalancer
+                  - elasticloadbalancing:RegisterTargets
+                Resource: '*'
 
   ### ECS Cluster and Service definition
 
@@ -382,7 +380,7 @@ Resources:
         - FARGATE
       Cpu: 256
       Memory: 512
-      TaskRoleArn: !Ref ECSRole
+      TaskRoleArn: !Ref ECSTaskRole
       ExecutionRoleArn: !Ref ECSTaskExecutionRole
       ContainerDefinitions:
         - Name: ecs-fargate-app
@@ -395,30 +393,31 @@ Resources:
               ContainerPort: 3000
               Protocol: tcp
           Environment:
-            - Name: AUTHOR
+            - Name: Author
               Value: Carlos Dias
       RuntimePlatform:
         CpuArchitecture: ARM64
         OperatingSystemFamily: LINUX
 
   # Create a ECS Cluster
-  Cluster:
+  ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: ecs-fargate-app-cluster
+      ClusterName: ECSCluster
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
       Tags:
         - Key: Name
-          Value: ecs-fargate-app-cluster
+          Value: ecs-fargate-app-ecs-cluster
 
   # Create the ECS Service
-  Service:
+  ECSService:
     Type: AWS::ECS::Service
     DependsOn: Listener
     Properties:
-      Cluster: !Ref Cluster
+      Cluster: !Ref ECSCluster
+      ServiceName: ecs-fargate-app-ecs-service
       TaskDefinition: !Ref TaskDefinition
       LaunchType: FARGATE
       PlatformVersion: 1.4.0
@@ -435,6 +434,9 @@ Resources:
           Subnets:
             - !Ref PrivateSubnet1
             - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: ecs-fargate-app-ecs-service
 
 Outputs:
   ApplicationLoadBalancerUrl:
