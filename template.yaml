@@ -248,7 +248,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for Fargate Containers on ECS Service
-      GroupName: ecs-fargate-app-alb-sg
+      GroupName: ecs-fargate-app-ecs-sg
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - Description: Allow port 3000 inbound traffic
@@ -271,7 +271,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Type: application
-      Name: ApplicationLoadBalancer
+      Name: ecs-fargate-app-alb
       Scheme: internet-facing
       Subnets:
         - !Ref PublicSubnet1
